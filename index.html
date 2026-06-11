@@ -127,7 +127,7 @@
     <h1>💳 SpendWise</h1>
     
     <div class="total-box">
-        💰 Total Cumulative Spending: $<span id="totalSpending">0.00</span>
+        💰 Total Cumulative Spending: ₹<span id="totalSpending">0.00</span>
     </div>
 
     <form id="expenseForm">
@@ -137,7 +137,7 @@
         </div>
         
         <div class="form-group">
-            <label for="amount">Amount Spent ($)</label>
+            <label for="amount">Amount Spent (₹)</label>
             <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required>
         </div>
 
@@ -174,7 +174,7 @@
 </div>
 
 <script>
-    // App Logic State
+    // Load existing items from localStorage browser database or default to empty array
     let expenses = JSON.parse(localStorage.getItem('spendwise_expenses')) || [];
 
     const expenseForm = document.getElementById('expenseForm');
@@ -182,7 +182,7 @@
     const noDataMessage = document.getElementById('noDataMessage');
     const totalSpendingEl = document.getElementById('totalSpending');
 
-    // Render interface calculations
+    // Refreshes the display and recalculates statistics
     function updateUI() {
         expenseTableBody.innerHTML = '';
         let total = 0;
@@ -199,7 +199,7 @@
                 row.innerHTML = `
                     <td>${escapeHtml(exp.item)}</td>
                     <td>${escapeHtml(exp.category)}</td>
-                    <td>$${exp.amount.toFixed(2)}</td>
+                    <td>₹${exp.amount.toFixed(2)}</td>
                 `;
                 expenseTableBody.appendChild(row);
             });
@@ -208,7 +208,7 @@
         totalSpendingEl.textContent = total.toFixed(2);
     }
 
-    // Handle form submission
+    // Handles capture events when clicking "Add Expense"
     expenseForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -219,20 +219,20 @@
         const newExpense = { item, amount, category };
         expenses.push(newExpense);
 
-        // Save back to localstorage
+        // Commit modifications to persistent LocalStorage browser state
         localStorage.setItem('spendwise_expenses', JSON.stringify(expenses));
 
-        // Reset fields and refresh
+        // Clean user interface inputs and sync interface states
         expenseForm.reset();
         updateUI();
     });
 
-    // Helper utility to prevent malicious inputs
+    // Sanitizes strings against scripting/tag injection vulnerabilities
     function escapeHtml(str) {
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // Initial load
+    // Initialize application layout state
     updateUI();
 </script>
 
