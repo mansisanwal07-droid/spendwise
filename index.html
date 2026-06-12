@@ -13,6 +13,8 @@
             --text: #1e293b;
             --border: #e2e8f0;
             --success: #10b981;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
         }
 
         body {
@@ -48,7 +50,39 @@
             text-align: center;
             font-size: 1.25rem;
             font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .analytics-box {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
             margin-bottom: 25px;
+        }
+        
+        .analytics-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .analytics-chip {
+            background: var(--surface);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            text-align: center;
         }
 
         .form-group {
@@ -75,6 +109,12 @@
             outline: 2px solid var(--primary);
         }
 
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
         button {
             width: 100%;
             background-color: var(--primary);
@@ -90,6 +130,15 @@
 
         button:hover {
             background-color: var(--primary-hover);
+        }
+
+        button.btn-clear {
+            background-color: #94a3b8;
+            width: 35%;
+        }
+        
+        button.btn-clear:hover {
+            background-color: #64748b;
         }
 
         .history-section {
@@ -124,10 +173,16 @@
 <body>
 
 <div class="container">
-    <h1> SpendWise</h1>
+    <h1>SpendWise</h1>
     
     <div class="total-box">
-         Total Cumulative Spending: ₹<span id="totalSpending">0.00</span>
+         Total Cumulative Spending: Free Local Currency Symbol <span id="totalSpending">0.00</span>
+    </div>
+
+    <div class="analytics-box">
+        <p class="analytics-title">Category Breakdown</p>
+        <div id="analyticsGrid" class="analytics-grid">
+        </div>
     </div>
 
     <form id="expenseForm">
@@ -137,7 +192,7 @@
         </div>
         
         <div class="form-group">
-            <label for="amount">Amount Spent (₹)</label>
+            <label for="amount">Amount Spent (Free Local Currency Symbol)</label>
             <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required>
         </div>
 
@@ -153,11 +208,14 @@
             </select>
         </div>
 
-        <button type="submit"> Add Expense</button>
+        <div class="btn-container">
+            <button type="submit">Add Expense</button>
+            <button type="button" class="btn-clear" id="clearBtn">Clear All</button>
+        </div>
     </form>
 
     <div class="history-section">
-        <h3>--- Your Expenses ---</h3>
+        <h3>Your Expenses</h3>
         <table>
             <thead>
                 <tr>
@@ -166,26 +224,27 @@
                     <th>Amount</th>
                 </tr>
             </thead>
-            <tbody id="expenseTableBody">
-                </tbody>
+            <tbody id="expenseTableBody"></tbody>
         </table>
-        <div id="noDataMessage" class="no-data"> No expenses recorded yet!</div>
+        <div id="noDataMessage" class="no-data">No expenses recorded yet!</div>
     </div>
 </div>
 
 <script>
-    // Load existing items from localStorage browser database or default to empty array
     let expenses = JSON.parse(localStorage.getItem('spendwise_expenses')) || [];
 
     const expenseForm = document.getElementById('expenseForm');
     const expenseTableBody = document.getElementById('expenseTableBody');
     const noDataMessage = document.getElementById('noDataMessage');
     const totalSpendingEl = document.getElementById('totalSpending');
+    const analyticsGrid = document.getElementById('analyticsGrid');
+    const clearBtn = document.getElementById('clearBtn');
 
-    // Refreshes the display and recalculates statistics
     function updateUI() {
         expenseTableBody.innerHTML = '';
         let total = 0;
+
+        const categoryTotals = { Food: 0, Education: 0, Travel: 0, Entertainment: 0, Other: 0 };
 
         if (expenses.length === 0) {
             noDataMessage.style.display = 'block';
@@ -195,20 +254,40 @@
             expenses.forEach(exp => {
                 total += exp.amount;
                 
+                if (categoryTotals[exp.category] !== undefined) {
+                    categoryTotals[exp.category] += exp.amount;
+                }
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${escapeHtml(exp.item)}</td>
                     <td>${escapeHtml(exp.category)}</td>
-                    <td>₹${exp.amount.toFixed(2)}</td>
+                    <td>Free Local Currency Symbol${exp.amount.toFixed(2)}</td>
                 `;
                 expenseTableBody.appendChild(row);
             });
         }
 
         totalSpendingEl.textContent = total.toFixed(2);
+        renderAnalytics(categoryTotals);
     }
 
-    // Handles capture events when clicking "Add Expense"
+    function renderAnalytics(categoryTotals) {
+        analyticsGrid.innerHTML = '';
+        for (const [category, amount] of Object.entries(categoryTotals)) {
+            if (amount > 0) {
+                const chip = document.createElement('div');
+                chip.className = 'analytics-chip';
+                chip.innerHTML = `<strong>${category}</strong><br>Free Local Currency Symbol${amount.toFixed(2)}`;
+                analyticsGrid.appendChild(chip);
+            }
+        }
+        
+        if (analyticsGrid.innerHTML === '') {
+            analyticsGrid.innerHTML = `<p style="margin:0; color:#64748b; font-style:italic;">No active insights available.</p>`;
+        }
+    }
+
     expenseForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -219,20 +298,24 @@
         const newExpense = { item, amount, category };
         expenses.push(newExpense);
 
-        // Commit modifications to persistent LocalStorage browser state
         localStorage.setItem('spendwise_expenses', JSON.stringify(expenses));
 
-        // Clean user interface inputs and sync interface states
         expenseForm.reset();
         updateUI();
     });
 
-    // Sanitizes strings against scripting/tag injection vulnerabilities
+    clearBtn.addEventListener('click', function() {
+        if (confirm("Are you sure you want to delete all recorded expenses?")) {
+            expenses = [];
+            localStorage.removeItem('spendwise_expenses');
+            updateUI();
+        }
+    });
+
     function escapeHtml(str) {
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // Initialize application layout state
     updateUI();
 </script>
 
