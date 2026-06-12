@@ -176,7 +176,7 @@
     <h1>SpendWise</h1>
     
     <div class="total-box">
-         Total Cumulative Spending: Free Local Currency Symbol <span id="totalSpending">0.00</span>
+         Total Cumulative Spending: ₹<span id="totalSpending">0.00</span>
     </div>
 
     <div class="analytics-box">
@@ -192,7 +192,7 @@
         </div>
         
         <div class="form-group">
-            <label for="amount">Amount Spent (Free Local Currency Symbol)</label>
+            <label for="amount">Amount Spent (₹)</label>
             <input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required>
         </div>
 
@@ -262,7 +262,7 @@
                 row.innerHTML = `
                     <td>${escapeHtml(exp.item)}</td>
                     <td>${escapeHtml(exp.category)}</td>
-                    <td>Free Local Currency Symbol${exp.amount.toFixed(2)}</td>
+                    <td>₹${exp.amount.toFixed(2)}</td>
                 `;
                 expenseTableBody.appendChild(row);
             });
@@ -278,7 +278,7 @@
             if (amount > 0) {
                 const chip = document.createElement('div');
                 chip.className = 'analytics-chip';
-                chip.innerHTML = `<strong>${category}</strong><br>Free Local Currency Symbol${amount.toFixed(2)}`;
+                chip.innerHTML = `strong>${category}</strong><br>₹${amount.toFixed(2)}`;
                 analyticsGrid.appendChild(chip);
             }
         }
